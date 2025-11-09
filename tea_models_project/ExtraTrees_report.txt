@@ -1,0 +1,16 @@
+Accuracy: 0.9863
+F1-Score: 0.9863
+
+              precision    recall  f1-score   support
+
+         DIM       1.00      0.97      0.98        31
+         KAN       1.00      1.00      1.00        31
+         NWE       0.97      0.94      0.95        31
+         RUN       1.00      1.00      1.00        32
+          SB       1.00      1.00      1.00        31
+         UPS       0.94      1.00      0.97        31
+         UVA       1.00      1.00      1.00        32
+
+    accuracy                           0.99       219
+   macro avg       0.99      0.99      0.99       219
+weighted avg       0.99      0.99      0.99       219

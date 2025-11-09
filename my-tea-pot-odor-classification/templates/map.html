@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tea Regions | TeaPot</title>
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/tea-bag.png') }}" type="image/x-icon" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&family=Poppins:wght@200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Vendor CSS Files -->
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/aos/aos.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet" />
+  <!-- Main CSS File -->
+  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" />
+  <style>
+    .tea-region-map {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .map-svg-container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .tea-region {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .tea-region:hover {
+      filter: brightness(1.2) drop-shadow(0 0 8px rgba(65, 84, 241, 0.6));
+    }
+    
+    .tea-region.active {
+      stroke: #4154f1;
+      stroke-width: 3;
+      animation: glow 1.5s infinite;
+    }
+    
+    @keyframes glow {
+      0%, 100% { 
+        filter: drop-shadow(0 0 8px rgba(65, 84, 241, 0.6)); 
+      }
+      50% { 
+        filter: drop-shadow(0 0 20px rgba(65, 84, 241, 1)); 
+      }
+    }
+    
+    .region-info-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      min-height: 400px;
+      border-left: 5px solid #4154f1;
+    }
+    
+    .region-info-card h3 {
+      color: #012970;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    
+    .region-stat {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .region-stat i {
+        font-size: 1.5rem;
+      color: #4154f1;
+      margin-right: 15px;
+      width: 30px;
+    }
+    
+    .legend-box {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    
+    .legend-color {
+      width: 40px;
+      height: 25px;
+        border-radius: 5px;
+      margin-right: 10px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .production-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    
+    .badge-very-high {
+      background: rgba(65, 84, 241, 0.9);
+      color: white;
+    }
+    
+    .badge-high {
+      background: rgba(65, 84, 241, 0.7);
+      color: white;
+    }
+    
+    .badge-medium {
+      background: rgba(65, 84, 241, 0.5);
+      color: white;
+    }
+</style>
+</head>
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="index.html" class="logo d-flex align-items-center me-auto"> 
+        <img src="../assets/img/tea-bag.png" alt="" /> 
+        <h1 class="sitename">TeaPot</h1> 
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="map.html" class="active">About</a></li>
+          <li><a href="model.html">Tea Classifier</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted flex-md-shrink-0" href="model.html">Get Started</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Hero Section -->
+    <section id="hero" class="hero section">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center">
+            <h1 data-aos="fade-up">Sri Lanka Tea Regions</h1>
+            <p data-aos="fade-up" data-aos-delay="100"> 
+              Explore the 7 major tea-producing regions of Ceylon. Each region has unique characteristics influenced by elevation, climate, and soil.
+            </p>
+    </div>
+          <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out">
+            <img src="../assets/img/tea.gif" class="img-fluid animated" alt="Tea Regions"/>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Map Section -->
+    <section id="tea-regions" class="section pt-0">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title text-center mb-5">
+          <h2>Interactive Tea Regions Map</h2>
+          <p>Click on regions to explore their unique characteristics</p>
+        </div>
+
+        <div class="row g-4">
+          <!-- Map -->
+          <div class="col-lg-7">
+            <div class="tea-region-map">
+              <div class="map-svg-container">
+                <svg id="sri-lanka-map" viewBox="0 0 600 900" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+                  <!-- Ocean background -->
+                  <rect width="600" height="900" fill="#e3f2fd" opacity="0.3"/>
+                  
+                  <!-- Main island outline -->
+                  <path id="outline" 
+                        d="M 300,100
+                           C 320,102 340,108 355,118
+                           L 370,130 C 385,145 395,162 405,180
+                           L 418,210 C 425,235 430,260 428,285
+                           L 425,320 C 423,350 418,375 410,400
+                           L 400,430 C 390,455 375,478 358,495
+                           L 340,512 C 320,525 298,535 275,538
+                           L 250,540 C 225,540 200,535 180,525
+                           L 155,512 C 135,498 120,480 108,460
+                           L 95,435 C 85,415 78,392 75,368
+                           L 72,340 C 70,315 72,290 77,265
+                           L 85,230 C 92,205 102,180 115,158
+                           L 130,135 C 145,115 163,98 183,88
+                           L 208,78 C 230,72 253,70 275,73
+                           L 300,78
+                           C 310,82 318,90 300,100 Z"
+                        fill="#e8f5e9" 
+                        stroke="#012970" 
+                        stroke-width="2"
+                        style="filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));"/>
+                  
+                  <!-- Tea Regions -->
+                  
+                  <!-- 1. Nuwara Eliya (Central highlands) -->
+                  <path id="nuwara-eliya" class="tea-region" data-region="Nuwara Eliya"
+                        d="M 265,320
+                           L 280,315 L 295,318 L 305,325
+                           L 308,340 L 305,355 L 295,362
+                           L 280,365 L 268,360 L 262,348
+                           L 260,335 Z"
+                        fill="rgba(65, 84, 241, 0.9)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 2. Dimbula (Western slopes) -->
+                  <path id="dimbula" class="tea-region" data-region="Dimbula"
+                        d="M 235,330
+                           L 255,325 L 265,332 L 268,345
+                           L 265,360 L 255,368 L 240,370
+                           L 228,365 L 223,355 L 225,340 Z"
+                        fill="rgba(65, 84, 241, 0.85)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 3. Uva (Eastern slopes) -->
+                  <path id="uva" class="tea-region" data-region="Uva"
+                        d="M 310,335
+                           L 330,332 L 345,338 L 355,350
+                           L 358,365 L 352,380 L 340,388
+                           L 325,390 L 312,385 L 308,370
+                           L 308,350 Z"
+                        fill="rgba(65, 84, 241, 0.88)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 4. Kandy (Mid-country) -->
+                  <path id="kandy" class="tea-region" data-region="Kandy"
+                        d="M 250,275
+                           L 270,270 L 290,272 L 305,280
+                           L 310,295 L 305,310 L 290,315
+                           L 270,318 L 255,312 L 248,298
+                           L 247,285 Z"
+                        fill="rgba(65, 84, 241, 0.7)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 5. Uda Pussellawa (Central-East) -->
+                  <path id="uda-pussellawa" class="tea-region" data-region="Uda Pussellawa"
+                        d="M 285,290
+                           L 305,288 L 320,293 L 328,305
+                           L 330,320 L 325,332 L 310,338
+                           L 295,338 L 283,330 L 280,315
+                           L 282,300 Z"
+                        fill="rgba(65, 84, 241, 0.75)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 6. Ruhuna (Southern lowlands) -->
+                  <path id="ruhuna" class="tea-region" data-region="Ruhuna"
+                        d="M 210,450
+                           L 235,445 L 260,448 L 280,455
+                           L 295,468 L 298,485 L 290,500
+                           L 270,510 L 245,512 L 220,508
+                           L 202,495 L 195,478 L 198,462 Z"
+                        fill="rgba(65, 84, 241, 0.6)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- 7. Sabaragamuwa (South-Central) -->
+                  <path id="sabaragamuwa" class="tea-region" data-region="Sabaragamuwa"
+                        d="M 215,380
+                           L 240,375 L 265,378 L 285,388
+                           L 295,405 L 292,425 L 280,440
+                           L 260,448 L 235,448 L 215,440
+                           L 202,425 L 200,405 L 205,390 Z"
+                        fill="rgba(65, 84, 241, 0.5)"
+                        stroke="#012970" 
+                        stroke-width="1.5"/>
+
+                  <!-- Region Labels -->
+                  <text x="285" y="345" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Nuwara Eliya</text>
+                  <text x="235" y="350" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Dimbula</text>
+                  <text x="330" y="365" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Uva</text>
+                  <text x="268" y="295" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Kandy</text>
+                  <text x="295" y="318" fill="#012970" font-size="9" font-weight="bold" pointer-events="none">U.Pussel</text>
+                  <text x="240" y="480" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Ruhuna</text>
+                  <text x="225" y="415" fill="#012970" font-size="10" font-weight="bold" pointer-events="none">Sabaragam</text>
+    </svg>
+              </div>
+
+              <!-- Legend -->
+              <div class="legend-box mt-4">
+                <h6 class="fw-bold mb-3">Tea Production Intensity</h6>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: rgba(65, 84, 241, 0.9);"></div>
+                  <span>Very High (85-95%)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: rgba(65, 84, 241, 0.7);"></div>
+                  <span>High (70-80%)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: rgba(65, 84, 241, 0.5);"></div>
+                  <span>Medium (50-60%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Region Information Panel -->
+          <div class="col-lg-5">
+            <div class="region-info-card" id="region-info-card">
+              <div class="text-center py-5">
+                <i class="bi bi-map display-1" style="color: #4154f1;"></i>
+                <h4 class="mt-3">Select a Region</h4>
+                <p class="text-muted">Click on any tea region to view detailed information</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="text-center mt-4">
+          <button class="btn btn-primary me-2" id="animate-btn">
+            <i class="bi bi-play-circle me-2"></i>Animate Distribution
+          </button>
+          <button class="btn btn-outline-primary" id="reset-btn">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Map
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer" class="footer">
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="d-flex align-items-center"><span class="sitename">TeaPot</span></a>
+          <div class="footer-contact pt-3">
+            <p>M.A.B. Kaveesh</p>
+            <p>University of Kelaniya</p>
+            <p>Department of Computer Science</p>
+            <p class="mt-3"><strong>Phone:</strong> <span>+94 71 234 5678</span></p>
+            <p><strong>Email:</strong> <span>kaveesh-ps20021@uok.ac.lk</span></p>
+          </div>
+        </div>
+  
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Home</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">About Us</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Research</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Contact</a></li>
+          </ul>
+        </div>
+  
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">AI Projects</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">ML/DL Models</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">QA Automation</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Apps</a></li>
+          </ul>
+        </div>
+  
+        <div class="col-lg-4 col-md-12">
+          <h4>Follow Me</h4>
+          <p>Stay connected through my socials below for project updates and more!</p>
+          <div class="social-links d-flex">
+            <a href="https://twitter.com/yourprofile" target="_blank"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://facebook.com/yourprofile" target="_blank"><i class="bi bi-facebook"></i></a>
+            <a href="https://instagram.com/yourprofile" target="_blank"><i class="bi bi-instagram"></i></a>
+            <a href="https://linkedin.com/in/kaveesh" target="_blank"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="container copyright text-center mt-4">
+      <p>
+        © <span>Copyright</span>
+        <strong class="px-1 sitename">Kaveesh</strong>
+        <span>All Rights Reserved</span>
+      </p>
+      <div class="credits">
+        Designed by <a href="#">Kaveesh</a> | Distributed by
+        <a href="#">UOK - FOS | DSCS & DC</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- Vendor JS Files -->
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/aos/aos.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/glightbox/js/glightbox.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/purecounter/purecounter_vanilla.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/swiper/swiper-bundle.min.js') }}"></script>
+
+<!-- Main JS File -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<!-- Tea Regions Map Script -->
+<script>
+  // Tea regions data
+  const teaRegionsData = {
+    'Nuwara Eliya': {
+      production: 0.9,
+      elevation: 'High Grown (above 1,200m)',
+      characteristics: 'Light, delicate, fragrant with floral notes. Known as the "Champagne of Ceylon Tea".',
+      annualProduction: '25,000 metric tons',
+      level: 'very-high'
+    },
+    'Dimbula': {
+      production: 0.85,
+      elevation: 'High Grown (1,200-1,800m)',
+      characteristics: 'Full-bodied with a crisp, strong flavor. Rose-like aroma.',
+      annualProduction: '30,000 metric tons',
+      level: 'very-high'
+    },
+    'Uva': {
+      production: 0.88,
+      elevation: 'High Grown (900-1,500m)',
+      characteristics: 'Bold and brisk with a distinctive flavor. Dry season teas are exceptional.',
+      annualProduction: '28,000 metric tons',
+      level: 'very-high'
+    },
+    'Kandy': {
+      production: 0.7,
+      elevation: 'Mid Grown (600-1,200m)',
+      characteristics: 'Strong, rich flavor with good color. Full-bodied character.',
+      annualProduction: '20,000 metric tons',
+      level: 'high'
+    },
+    'Uda Pussellawa': {
+      production: 0.75,
+      elevation: 'High Grown (900-1,500m)',
+      characteristics: 'Medium-bodied with a hint of sweetness. Pink-tinged liquor.',
+      annualProduction: '18,000 metric tons',
+      level: 'high'
+    },
+    'Ruhuna': {
+      production: 0.6,
+      elevation: 'Low Grown (below 600m)',
+      characteristics: 'Full-bodied with a strong, distinct flavor. Dark color.',
+      annualProduction: '15,000 metric tons',
+      level: 'medium'
+    },
+    'Sabaragamuwa': {
+      production: 0.5,
+      elevation: 'Low to Mid Grown (300-800m)',
+      characteristics: 'Smooth and mellow with good color. Popular for blending.',
+      annualProduction: '12,000 metric tons',
+      level: 'medium'
+    }
+  };
+
+  // Initialize map interactions
+  document.addEventListener('DOMContentLoaded', function() {
+    const regions = document.querySelectorAll('.tea-region');
+
+    regions.forEach(region => {
+      region.addEventListener('click', function() {
+        const regionName = this.getAttribute('data-region');
+        showRegionInfo(regionName, this);
+      });
+
+      region.addEventListener('mouseenter', function() {
+        if (!this.classList.contains('active')) this.style.strokeWidth = '3';
+      });
+
+      region.addEventListener('mouseleave', function() {
+        if (!this.classList.contains('active')) this.style.strokeWidth = '1.5';
+      });
+    });
+
+    // Animate button
+    const animateBtn = document.getElementById('animate-btn');
+    if (animateBtn) animateBtn.addEventListener('click', animateDistribution);
+
+    // Reset button
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetMap);
+  });
+
+  function showRegionInfo(regionName, element) {
+    const data = teaRegionsData[regionName];
+    const infoCard = document.getElementById('region-info-card');
+    if (!data || !infoCard) return;
+
+    // Remove active class
+    document.querySelectorAll('.tea-region').forEach(r => {
+      r.classList.remove('active');
+      r.style.strokeWidth = '1.5';
+    });
+
+    // Add active class
+    element.classList.add('active');
+
+    // Update info card
+    infoCard.innerHTML = `
+      <h3><i class="bi bi-geo-alt"></i> ${regionName}</h3>
+      <div class="region-stat">
+        <i class="bi bi-bar-chart-fill"></i>
+        <div>
+          <strong>Annual Production</strong><br>
+          <span>${data.annualProduction}</span>
+        </div>
+      </div>
+      <div class="region-stat">
+        <i class="bi bi-mountain"></i>
+        <div>
+          <strong>Elevation</strong><br>
+          <span>${data.elevation}</span>
+        </div>
+      </div>
+      <div class="region-stat">
+        <i class="bi bi-flower1"></i>
+        <div>
+          <strong>Characteristics</strong><br>
+          <span>${data.characteristics}</span>
+        </div>
+      </div>
+      <div class="mt-3">
+        <span class="production-badge badge-${data.level}">
+          Production: ${capitalizeFirst(data.level.replace('-', ' '))}
+        </span>
+      </div>
+    `;
+
+    infoCard.style.animation = 'fadeIn 0.5s ease';
+  }
+
+  function animateDistribution() {
+    const regions = Array.from(document.querySelectorAll('.tea-region'));
+    const sorted = regions.sort((a, b) => {
+      const prodA = teaRegionsData[a.getAttribute('data-region')].production;
+      const prodB = teaRegionsData[b.getAttribute('data-region')].production;
+      return prodB - prodA;
+    });
+
+    sorted.forEach((region, index) => {
+      setTimeout(() => {
+        showRegionInfo(region.getAttribute('data-region'), region);
+      }, index * 1000);
+    });
+  }
+
+  function resetMap() {
+    const infoCard = document.getElementById('region-info-card');
+    if (!infoCard) return;
+    document.querySelectorAll('.tea-region').forEach(r => {
+      r.classList.remove('active');
+      r.style.strokeWidth = '1.5';
+    });
+
+    infoCard.innerHTML = `
+      <div class="text-center py-5">
+        <i class="bi bi-map display-1" style="color: #4154f1;"></i>
+        <h4 class="mt-3">Select a Region</h4>
+        <p class="text-muted">Click on any tea region to view detailed information</p>
+      </div>
+    `;
+  }
+
+  function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // Keyframes moved to CSS, remove from JS
+</script>
+
+</body>
+</html>
