@@ -151,6 +151,106 @@ def health():
         'confidence_threshold': CONFIDENCE_THRESHOLD
     })
 
+# BATCH PREDICTION
+@app.route('/predict-batch', methods=['POST'])
+def predict_batch():
+    if not MODEL_LOADED:
+        return jsonify({'success': False, 'error': 'Model not loaded'}), 500
+
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({'error': 'Only CSV files are accepted'}), 400
+
+        df = pd.read_csv(io.StringIO(file.read().decode('utf-8')))
+
+        if df.shape[1] != 7:
+            return jsonify({
+                'error': 'CSV must contain exactly 7 sensor columns'
+            }), 400
+
+        if len(df) == 0:
+            return jsonify({'error': 'CSV file is empty'}), 400
+
+        if len(df) > 500:
+            return jsonify({'error': 'Maximum 500 samples per upload'}), 400
+
+        results = []
+
+        for idx, row in df.iterrows():
+            sensors = row.values.astype(float).tolist()
+
+            sample_result = {
+                'sample_index': idx + 1,
+                'input_sensors': sensors,
+                'status': 'REJECTED'
+            }
+
+            # ---------- GLOBAL RANGE CHECK ----------
+            if not global_range_check(sensors):
+                sample_result.update({
+                    'reason': 'OOD_GLOBAL',
+                    'message': 'Sensor values far outside training distribution'
+                })
+                results.append(sample_result)
+                continue
+
+            X = np.array([sensors])
+
+            # ---------- MODEL PREDICTION ----------
+            pred_idx = model.predict(X)[0]
+            predicted_region = encoder.inverse_transform([pred_idx])[0]
+            probabilities = model.predict_proba(X)[0]
+            confidence = float(probabilities[pred_idx])
+
+            # ---------- CONFIDENCE CHECK ----------
+            if confidence < CONFIDENCE_THRESHOLD:
+                sample_result.update({
+                    'reason': 'LOW_CONFIDENCE',
+                    'confidence': confidence
+                })
+                results.append(sample_result)
+                continue
+
+            # ---------- REGION RANGE CHECK ----------
+            if not region_range_check(predicted_region, sensors):
+                sample_result.update({
+                    'reason': 'REGION_MISMATCH',
+                    'predicted_region': predicted_region,
+                    'confidence': confidence
+                })
+                results.append(sample_result)
+                continue
+
+            # ---------- ACCEPT ----------
+            sample_result.update({
+                'status': 'ACCEPTED',
+                'prediction': predicted_region,
+                'confidence': confidence,
+                'probabilities': dict(zip(encoder.classes_, probabilities))
+            })
+
+            results.append(sample_result)
+
+        return jsonify({
+            'success': True,
+            'total_samples': len(results),
+            'accepted': sum(r['status'] == 'ACCEPTED' for r in results),
+            'rejected': sum(r['status'] == 'REJECTED' for r in results),
+            'model': 'ExtraTrees',
+            'results': results
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # RUN
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
