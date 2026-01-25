@@ -6,7 +6,7 @@ import pandas as pd
 import pickle
 import io
 import os
-
+from dashboard.routes import dashboard_bp
 # --------------------------
 # IMPORT FUNCTIONAL DB
 # --------------------------
@@ -22,6 +22,8 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB limit
 
 # Initialize SQLite DB (creates database.db and tables if not exist)
 init_db()
+
+app.register_blueprint(dashboard_bp)
 
 # --------------------------
 # BASE DIR & PATHS
@@ -157,9 +159,19 @@ def predict():
             }), 422
 
         # ---- SUCCESS: LOG TO DB ----
+        status = "ACCEPTED"
+
+        if confidence < CONFIDENCE_THRESHOLD:
+            status = "REJECTED"
+
+        elif not region_range_check(predicted_region, sensors):
+            status = "REJECTED"
+
         insert_user_prediction(
             input_dict={"sensors": sensors},
-            prediction=predicted_region
+            predicted_region=predicted_region,
+            confidence=confidence,
+            status=status
         )
 
         return jsonify({
@@ -249,10 +261,20 @@ def predict_batch():
                 "probabilities": dict(zip(encoder.classes_, probabilities))
             })
 
+            status = "ACCEPTED"
+
+            if confidence < CONFIDENCE_THRESHOLD:
+                status = "REJECTED"
+
+            elif not region_range_check(predicted_region, sensors):
+                status = "REJECTED"
+
             insert_batch_prediction(
                 filename=file.filename,
                 row_dict={"sensors": sensors},
-                prediction=predicted_region
+                predicted_region=predicted_region,
+                confidence=confidence,
+                status=status
             )
 
             results.append(sample)

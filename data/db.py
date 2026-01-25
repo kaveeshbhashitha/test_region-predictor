@@ -18,23 +18,25 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Table for single user predictions
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_predictions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             input_data TEXT NOT NULL,
-            prediction TEXT,
+            predicted_region TEXT,
+            confidence REAL,
+            status TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
-    # Table for batch predictions
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS batch_predictions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT,
             row_data TEXT NOT NULL,
-            prediction TEXT,
+            predicted_region TEXT,
+            confidence REAL,
+            status TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -46,14 +48,20 @@ def init_db():
 # --------------------------
 # Insert single prediction
 # --------------------------
-def insert_user_prediction(input_dict, prediction):
+def insert_user_prediction(input_dict, predicted_region, confidence, status):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO user_predictions (input_data, prediction)
-        VALUES (?, ?)
-    """, (json.dumps(input_dict), str(prediction)))
+        INSERT INTO user_predictions 
+        (input_data, predicted_region, confidence, status)
+        VALUES (?, ?, ?, ?)
+    """, (
+        json.dumps(input_dict),
+        predicted_region,
+        confidence,
+        status
+    ))
 
     conn.commit()
     conn.close()
@@ -61,17 +69,25 @@ def insert_user_prediction(input_dict, prediction):
 # --------------------------
 # Insert batch predictions
 # --------------------------
-def insert_batch_prediction(filename, row_dict, prediction):
+def insert_batch_prediction(filename, row_dict, predicted_region, confidence, status):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO batch_predictions (filename, row_data, prediction)
-        VALUES (?, ?, ?)
-    """, (filename, json.dumps(row_dict), str(prediction)))
+        INSERT INTO batch_predictions
+        (filename, row_data, predicted_region, confidence, status)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        filename,
+        json.dumps(row_dict),
+        predicted_region,
+        confidence,
+        status
+    ))
 
     conn.commit()
     conn.close()
+
 
 # --------------------------
 # Query all user predictions
@@ -94,3 +110,43 @@ def get_all_batch_predictions():
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+# Query to get statistics per region
+def get_region_statistics():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+            predicted_region,
+            COUNT(*) AS total_predictions,
+            SUM(CASE WHEN status = 'ACCEPTED' THEN 1 ELSE 0 END) AS accepted,
+            AVG(confidence) AS avg_confidence
+        FROM (
+            SELECT predicted_region, status, confidence
+            FROM user_predictions
+
+            UNION ALL
+
+            SELECT predicted_region, status, confidence
+            FROM batch_predictions
+        )
+        GROUP BY predicted_region
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "region": r[0],
+            "total": r[1],
+            "accepted": r[2],
+            "rejected": r[1] - r[2],
+            "avg_confidence": round(r[3], 3) if r[3] else None
+        }
+        for r in rows
+    ]
+
+
