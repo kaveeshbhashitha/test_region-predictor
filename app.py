@@ -7,18 +7,32 @@ import pickle
 import io
 import os
 
+# --------------------------
+# IMPORT FUNCTIONAL DB
+# --------------------------
+from data.db import init_db, insert_user_prediction, insert_batch_prediction
+
+# --------------------------
 # APP CONFIG
+# --------------------------
 app = Flask(__name__)
 CORS(app)
 
-# BASE_DIR → the directory where app.py lives (root of your project)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB limit
 
-# Paths to model & data inside tea_models_project
+# Initialize SQLite DB (creates database.db and tables if not exist)
+init_db()
+
+# --------------------------
+# BASE DIR & PATHS
+# --------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "tea_models_project", "ExtraTrees_model.pkl")
 DATA_PATH = os.path.join(BASE_DIR, "tea_models_project", "tea_aroma_balanced.csv")
 
-# MODEL LOADING
+# --------------------------
+# LOAD MODEL
+# --------------------------
 try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
@@ -28,9 +42,10 @@ except Exception as e:
     print(f"Model loading error: {e}")
     MODEL_LOADED = False
 
-# DATA & ENCODER
+# --------------------------
+# LOAD DATA & ENCODER
+# --------------------------
 data = pd.read_csv(DATA_PATH)
-
 X_data = data.iloc[:, :-1]
 y_data = data.iloc[:, -1]
 
@@ -55,7 +70,9 @@ for region in TEA_REGIONS:
 TOLERANCE = 5.0
 CONFIDENCE_THRESHOLD = 0.55
 
+# --------------------------
 # ROUTES
+# --------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -68,7 +85,9 @@ def map_page():
 def model_page():
     return render_template("model.html")
 
+# --------------------------
 # HELPER FUNCTIONS
+# --------------------------
 def global_range_check(sensors):
     for i, val in enumerate(sensors):
         if val < (GLOBAL_MIN.iloc[i] - TOLERANCE) or val > (GLOBAL_MAX.iloc[i] + TOLERANCE):
@@ -82,7 +101,9 @@ def region_range_check(region, sensors):
             return False
     return True
 
+# --------------------------
 # SINGLE PREDICTION
+# --------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     if not MODEL_LOADED:
@@ -135,7 +156,12 @@ def predict():
                 "error": "Sensor pattern does not fit predicted region"
             }), 422
 
-        # ---- SUCCESS ----
+        # ---- SUCCESS: LOG TO DB ----
+        insert_user_prediction(
+            input_dict={"sensors": sensors},
+            prediction=predicted_region
+        )
+
         return jsonify({
             "success": True,
             "prediction": predicted_region,
@@ -148,7 +174,9 @@ def predict():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# --------------------------
 # BATCH PREDICTION
+# --------------------------
 @app.route("/predict-batch", methods=["POST"])
 def predict_batch():
     if not MODEL_LOADED:
@@ -213,12 +241,19 @@ def predict_batch():
                 results.append(sample)
                 continue
 
+            # ---- SUCCESS: LOG TO DB ----
             sample.update({
                 "status": "ACCEPTED",
                 "prediction": predicted_region,
                 "confidence": confidence,
                 "probabilities": dict(zip(encoder.classes_, probabilities))
             })
+
+            insert_batch_prediction(
+                filename=file.filename,
+                row_dict={"sensors": sensors},
+                prediction=predicted_region
+            )
 
             results.append(sample)
 
@@ -234,7 +269,9 @@ def predict_batch():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# --------------------------
 # HEALTH CHECK
+# --------------------------
 @app.route("/health")
 def health():
     return jsonify({
@@ -245,6 +282,8 @@ def health():
         "confidence_threshold": CONFIDENCE_THRESHOLD
     })
 
+# --------------------------
 # RUN (LOCAL ONLY – RENDER USES GUNICORN)
+# --------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
