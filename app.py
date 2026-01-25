@@ -11,15 +11,12 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Optional safety (recommended for public hosting)
-app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB
-
-# PATH SETUP (OS-INDEPENDENT)
+# BASE_DIR → the directory where app.py lives (root of your project)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
-MODEL_PATH = os.path.join(PROJECT_ROOT, "tea_models_project", "ExtraTrees_model.pkl")
-DATA_PATH = os.path.join(PROJECT_ROOT, "tea_models_project", "tea_aroma_balanced.csv")
+# Paths to model & data inside tea_models_project
+MODEL_PATH = os.path.join(BASE_DIR, "tea_models_project", "ExtraTrees_model.pkl")
+DATA_PATH = os.path.join(BASE_DIR, "tea_models_project", "tea_aroma_balanced.csv")
 
 # MODEL LOADING
 try:
