@@ -119,10 +119,11 @@ Result: No matches found ✅
 ### Current Structure:
 ```
 test_cursor/
+── requirements.txt 
 ├── my-tea-pot-odor-classification/
 │   ├── app.py                      ✅ Updated (line 16)
 │   ├── model.py                    ✅ No issues
-│   ├── requirements.txt            ✅ No path refs
+│                  ✅ No path refs
 │   ├── README.md                   ✅ Updated
 │   ├── START_HERE.txt              ✅ Updated
 │   ├── templates/
