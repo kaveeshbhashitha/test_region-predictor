@@ -36,7 +36,8 @@ function handleFileSelect(event) {
   }
 
   selectedFile = file;
-  console.log("📄 Selected CSV:", file.name);
+  console.log("Selected CSV:", file.name);
+  alert("File selected successfully");
 
   showAnalyzeButton();
 }
@@ -85,11 +86,11 @@ async function submitBatch() {
       throw new Error(result.error || "Batch prediction failed");
     }
 
-    console.log("✅ Batch response:", result);
+    console.log("Batch response:", result);
     renderBatchResults(result);
 
   } catch (err) {
-    console.error("❌ Batch error:", err);
+    console.error("Batch error:", err);
     alert(err.message);
 
   } finally {
