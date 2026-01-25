@@ -202,6 +202,7 @@ document.querySelectorAll('.btn-primary').forEach(btn => {
 });
 
 // ---- File Upload / Batch CSV Handling ----
+/*
 document.querySelector('.upload-area').addEventListener('click', () => document.getElementById('batchFile').click());
 
 document.getElementById('batchFile').addEventListener('change', function(e) {
@@ -262,6 +263,7 @@ document.getElementById('batchFile').addEventListener('change', function(e) {
   };
   reader.readAsText(file);
 });
+*/
 
 // ---- Export Results as PDF ----
 document.getElementById("exportReportBtn").addEventListener("click", function () {

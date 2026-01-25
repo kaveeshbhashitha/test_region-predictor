@@ -1,159 +1,141 @@
-console.log("Batch CSV handler loaded");
+console.log("✅ Batch CSV handler loaded");
 
+// ==============================
+// DOM ELEMENTS
+// ==============================
 const batchFileInput = document.getElementById("batchFile");
 const uploadArea = document.querySelector(".upload-area");
 const selectFileBtn = document.getElementById("selectFileBtn");
 
-const csvPreview = document.getElementById("csvPreview");
-const csvTableHead = document.getElementById("csvTableHead");
-const csvTableBody = document.getElementById("csvTableBody");
+const batchResults = document.getElementById("batchResults");
+const batchSummary = document.getElementById("batchSummary");
+const batchResultsBody = document.getElementById("batchResultsBody");
 
 let selectedFile = null;
+let analyzeBtn = null;
 
 // ==============================
 // FILE SELECTION
 // ==============================
 selectFileBtn.addEventListener("click", () => batchFileInput.click());
-
 uploadArea.addEventListener("click", () => batchFileInput.click());
-
 batchFileInput.addEventListener("change", handleFileSelect);
 
 // ==============================
-// HANDLE FILE
+// HANDLE FILE SELECT
 // ==============================
 function handleFileSelect(event) {
   const file = event.target.files[0];
-  console.log("Selected file:", file); // Debugging line
-  if (!file) {
-    console.log("No file selected."); // Debugging line
-    return;
-  }
+
+  if (!file) return;
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
     alert("Only CSV files are allowed");
+    batchFileInput.value = "";
     return;
   }
 
   selectedFile = file;
-  console.log("File set for analysis:", selectedFile); // Debugging line
-  previewCSV(file);
+  console.log("📄 Selected CSV:", file.name);
+
+  showAnalyzeButton();
 }
 
 // ==============================
-// CSV PREVIEW
+// ANALYZE BUTTON (UI-INDEPENDENT)
 // ==============================
-function previewCSV(file) {
-  const reader = new FileReader();
+function showAnalyzeButton() {
+  if (analyzeBtn) return;
 
-  reader.onload = function (e) {
-    const lines = e.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+  analyzeBtn = document.createElement("button");
+  analyzeBtn.id = "analyzeBatchBtn";
+  analyzeBtn.className = "btn btn-success mt-4";
+  analyzeBtn.textContent = "Analyze Batch CSV";
 
-    if (lines.length < 2) {
-      alert("CSV must contain at least one data row");
-      return;
-    }
+  analyzeBtn.addEventListener("click", submitBatch);
 
-    const headers = lines[0].split(",");
-    if (headers.length !== 7) {
-      alert("CSV must have exactly 7 sensor columns");
-      return;
-    }
-
-    // Clear table
-    csvTableHead.innerHTML = "";
-    csvTableBody.innerHTML = "";
-
-    // Header
-    const headerRow = document.createElement("tr");
-    headers.forEach(h => {
-      const th = document.createElement("th");
-      th.textContent = h.trim();
-      headerRow.appendChild(th);
-    });
-    csvTableHead.appendChild(headerRow);
-
-    // Preview rows (max 10)
-    lines.slice(1, 11).forEach(row => {
-      const tr = document.createElement("tr");
-      row.split(",").forEach(cell => {
-        const td = document.createElement("td");
-        td.textContent = cell.trim();
-        tr.appendChild(td);
-      });
-      csvTableBody.appendChild(tr);
-    });
-
-    csvPreview.style.display = "block";
-    injectAnalyzeButton();
-  };
-
-  reader.readAsText(file);
+  // Append button under upload area
+  uploadArea.parentElement.appendChild(analyzeBtn);
 }
 
-// ANALYZE BUTTON
-function injectAnalyzeButton() {
-  if (document.getElementById("analyzeBatchBtn")) return;
-
-  const btn = document.createElement("button");
-  btn.id = "analyzeBatchBtn";
-  btn.className = "btn btn-success mt-4";
-  btn.textContent = "Analyze Batch CSV";
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    submitBatch();
-  });
-
-  csvPreview.appendChild(btn);
-}
-
+// ==============================
+// SUBMIT BATCH
+// ==============================
 async function submitBatch() {
   if (!selectedFile) {
     alert("Please select a CSV file first");
     return;
   }
 
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = "Analyzing...";
+
   const formData = new FormData();
   formData.append("file", selectedFile);
-
-  console.log("📤 Sending file:", selectedFile.name);
 
   try {
     const response = await fetch("/predict-batch", {
       method: "POST",
-      body: formData   // ❗ DO NOT set headers
+      body: formData // ❗ no headers
     });
 
     const result = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || !result.success) {
       throw new Error(result.error || "Batch prediction failed");
     }
 
-    console.log("✅ Batch result:", result);
-    displayBatchSummary(result);
+    console.log("✅ Batch response:", result);
+    renderBatchResults(result);
 
   } catch (err) {
     console.error("❌ Batch error:", err);
     alert(err.message);
+
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = "Analyze Batch CSV";
   }
 }
 
 // ==============================
-// DISPLAY SUMMARY
+// RENDER RESULTS
 // ==============================
-function displayBatchSummary(result) {
-  alert(
-    `Batch completed\n\n` +
-    `Total samples: ${result.total_samples}\n` +
-    `Accepted: ${result.accepted}\n` +
-    `Rejected: ${result.rejected}`
-  );
+function renderBatchResults(response) {
+  batchResults.style.display = "block";
+  batchResultsBody.innerHTML = "";
 
-  // Optional: log rejected reasons
-  const rejected = result.results.filter(r => r.status === "REJECTED");
-  if (rejected.length > 0) {
-    console.warn("Rejected samples:", rejected);
-  }
+  // ---- Summary alert ----
+  batchSummary.className =
+    response.rejected === 0
+      ? "alert alert-success mt-3"
+      : "alert alert-warning mt-3";
+
+  batchSummary.innerHTML = `
+    <strong>Batch Analysis Complete</strong><br>
+    Total Samples: ${response.total_samples} |
+    Accepted: ${response.accepted} |
+    Rejected: ${response.rejected} |
+    Model: ${response.model}
+  `;
+  batchSummary.style.display = "block";
+
+  // ---- Table rows ----
+  response.results.forEach(r => {
+    const tr = document.createElement("tr");
+
+    const statusBadge =
+      r.status === "ACCEPTED"
+        ? `<span class="badge bg-success">Accepted</span>`
+        : `<span class="badge bg-danger">Rejected</span>`;
+
+    tr.innerHTML = `
+      <td>${r.sample_index}</td>
+      <td>${r.prediction ?? "-"}</td>
+      <td>${(r.confidence * 100).toFixed(2)}%</td>
+      <td>${statusBadge}</td>
+    `;
+
+    batchResultsBody.appendChild(tr);
+  });
 }
