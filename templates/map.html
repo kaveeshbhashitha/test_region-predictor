@@ -19,9 +19,6 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
-    .stats {
-      margin-bottom: 10px;
-    }
     iframe {
       width: 100%;
       height: 300px;
@@ -33,28 +30,24 @@
 
 <h1>Tea Region Prediction Statistics</h1>
 
-{% if regions %}
-  {% for r in regions %}
-    <div class="region-card">
-      <div class="region-title">{{ r.region }}</div>
+{% for r in regions %}
+  <div class="region-card">
+    <div class="region-title">{{ r.display_name }}</div>
 
-      <div class="stats">
-        <p><b>Total predictions:</b> {{ r.total }}</p>
-        <p><b>Accepted:</b> {{ r.accepted }}</p>
-        <p><b>Rejected:</b> {{ r.rejected }}</p>
-        <p><b>Average confidence:</b> {{ r.avg_confidence }}</p>
-      </div>
+    <p><b>Total predictions:</b> {{ r.total }}</p>
+    <p><b>Accepted:</b> {{ r.accepted }}</p>
+    <p><b>Rejected:</b> {{ r.rejected }}</p>
+    <p><b>Average confidence:</b> {{ r.avg_confidence }}</p>
 
-      {% if r.map_url %}
-        <iframe src="{{ r.map_url }}" loading="lazy"></iframe>
-      {% else %}
-        <p>No map available for this region.</p>
-      {% endif %}
-    </div>
-  {% endfor %}
+    {% if r.map_url %}
+      <iframe src="{{ r.map_url }}" loading="lazy"></iframe>
+    {% else %}
+      <p>No map available for this region.</p>
+    {% endif %}
+  </div>
 {% else %}
   <p>No prediction data available yet.</p>
-{% endif %}
+{% endfor %}
 
 </body>
 </html>

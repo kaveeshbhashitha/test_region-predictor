@@ -118,19 +118,15 @@ def get_region_statistics():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT 
+        SELECT
             predicted_region,
-            COUNT(*) AS total_predictions,
-            SUM(CASE WHEN status = 'ACCEPTED' THEN 1 ELSE 0 END) AS accepted,
-            AVG(confidence) AS avg_confidence
+            COUNT(*) as total,
+            SUM(CASE WHEN status='ACCEPTED' THEN 1 ELSE 0 END) as accepted,
+            AVG(confidence) as avg_confidence
         FROM (
-            SELECT predicted_region, status, confidence
-            FROM user_predictions
-
+            SELECT predicted_region, status, confidence FROM user_predictions
             UNION ALL
-
-            SELECT predicted_region, status, confidence
-            FROM batch_predictions
+            SELECT predicted_region, status, confidence FROM batch_predictions
         )
         GROUP BY predicted_region
     """)
@@ -140,13 +136,11 @@ def get_region_statistics():
 
     return [
         {
-            "region": r[0],
-            "total": r[1],
-            "accepted": r[2],
-            "rejected": r[1] - r[2],
-            "avg_confidence": round(r[3], 3) if r[3] else None
+            "region": r["predicted_region"],
+            "total": r["total"],
+            "accepted": r["accepted"],
+            "rejected": r["total"] - r["accepted"],
+            "avg_confidence": round(r["avg_confidence"], 3) if r["avg_confidence"] else None
         }
         for r in rows
     ]
-
-
