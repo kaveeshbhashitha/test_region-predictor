@@ -3,16 +3,24 @@ import sqlite3
 from datetime import datetime
 import json
 
-HOME_DIR = os.environ.get("HOME", "/home")  # fallback just in case
-DB_DIR = os.path.join(HOME_DIR, "Data")
-os.makedirs(DB_DIR, exist_ok=True)  # create directory if not exists
+# -------------------------
+# Use only /home for persistent storage
+# -------------------------
+HOME_DIR = os.environ.get("HOME", "/home")  # Azure guarantees /home exists
+DB_DIR = os.path.join(HOME_DIR, "app_data")  # safe writable folder
+os.makedirs(DB_DIR, exist_ok=True)
 
 DB_PATH = os.path.join(DB_DIR, "database.db")
+print(f"[INFO] Using database path: {DB_PATH}")  # logs to help debug
 
+# -------------------------
+# Get connection
+# -------------------------
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return sqlite3.connect(DB_PATH, check_same_thread=False)  # important for multi-worker
+
+# -------------------------
+# Initialize DB
 
 # Initialize DB
 def init_db():
