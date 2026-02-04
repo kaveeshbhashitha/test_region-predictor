@@ -3,11 +3,16 @@ import sqlite3
 from datetime import datetime
 import json
 
-# DB Path Setup
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "Data", "database.db")
+HOME_DIR = os.environ.get("HOME", "/home")  # Azure App Service persistent storage
+DB_DIR = os.path.join(HOME_DIR, "data")     # create a folder called 'data'
+os.makedirs(DB_DIR, exist_ok=True)          # ensure folder exists
+DB_PATH = os.path.join(DB_DIR, "database.db")
 
+print(f"[INFO] Using SQLite DB path: {DB_PATH}")  # useful for logs
+
+# --------------------------
 # Helper to get connection
+# --------------------------
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  # allows dict-like access

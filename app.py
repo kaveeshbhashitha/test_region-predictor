@@ -12,6 +12,13 @@ from dashboard.routes import dashboard_bp
 # --------------------------
 from data.db import init_db, insert_user_prediction, insert_batch_prediction
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "tea_models_project", "ExtraTrees_model.pkl")
+DATA_PATH = os.path.join(BASE_DIR, "tea_models_project", "tea_aroma_balanced.csv")
+DB_DIR = os.path.join(os.environ.get("HOME", "/home"), "data")
+os.makedirs(DB_DIR, exist_ok=True)  # make sure folder exists
+DB_PATH = os.path.join(DB_DIR, "database.db")
+
 # --------------------------
 # APP CONFIG
 # --------------------------
@@ -28,9 +35,6 @@ app.register_blueprint(dashboard_bp)
 # --------------------------
 # BASE DIR & PATHS
 # --------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "tea_models_project", "ExtraTrees_model.pkl")
-DATA_PATH = os.path.join(BASE_DIR, "tea_models_project", "tea_aroma_balanced.csv")
 
 # --------------------------
 # LOAD MODEL
