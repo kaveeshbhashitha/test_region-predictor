@@ -12,9 +12,28 @@
         #map { height: 100vh; width: 100%; }
         
         .info-panel {
-            position: absolute; top: 20px; right: 20px; z-index: 1000;
-            background: white; padding: 20px; border-radius: 12px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
             width: 150px;
+
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            scroll-behavior: smooth;
+        }
+
+        .left-navigation {
+            position: absolute; top: 100px; left: 15px; z-index: 1000;
+            background: white; padding: 15px; border-radius: 12px;
+            width: 50px;
+            text-align: center;
         }
         
         h6 { color: #1b5e20; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -53,7 +72,6 @@
 
   <div class="info-panel">
       <h4>7 Tea Regions</h4>
-      <a href="">Home</a>
       <div class="underline"></div>
       {% for r in regions %}
         <div>
@@ -69,6 +87,7 @@
   <p>No prediction data available yet.</p>
 {% endif %}
 
+<a href="{{ url_for('index') }}"><div class="left-navigation">Back</div></a>
 
 <div id="map"></div>
 
@@ -112,27 +131,8 @@
           .bindPopup("<b>" + reg.name + "</b><br>" + reg.desc);
     });
 
-    // Define a custom control for the Back Button
-var backButton = L.Control.extend({
-    options: {
-        position: 'topleft' // Places it near the + / - buttons
-    },
-
-    onAdd: function (map) {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        var button = L.DomUtil.create('a', 'leaflet-control-back', container);
-        
-        // Left arrow symbol and hyperlink to your index page
-        button.innerHTML = '&#8592;'; 
-        button.href = "{{ url_for('index') }}"; // Change this to your actual index filename
-        button.title = 'Back to Home';
-
-        return container;
-    }
-});
-
 // Add the button to the map
-map.addControl(new backButton());
+//map.addControl(new backButton());
 </script>
 
 </body>
