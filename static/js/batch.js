@@ -6,6 +6,7 @@ console.log("✅ Batch CSV handler loaded");
 const batchFileInput = document.getElementById("batchFile");
 const uploadArea = document.querySelector(".upload-area");
 const selectFileBtn = document.getElementById("selectFileBtn");
+const uploadText = document.getElementById("uploadText");
 
 const batchResults = document.getElementById("batchResults");
 const batchSummary = document.getElementById("batchSummary");
@@ -17,7 +18,10 @@ let analyzeBtn = null;
 // ==============================
 // FILE SELECTION
 // ==============================
-selectFileBtn.addEventListener("click", () => batchFileInput.click());
+selectFileBtn.addEventListener("click", (e) => {
+  e.stopPropagation();      // 🔑 THIS LINE
+  batchFileInput.click();
+});
 uploadArea.addEventListener("click", () => batchFileInput.click());
 batchFileInput.addEventListener("change", handleFileSelect);
 
@@ -26,21 +30,29 @@ batchFileInput.addEventListener("change", handleFileSelect);
 // ==============================
 function handleFileSelect(event) {
   const file = event.target.files[0];
-
   if (!file) return;
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
-    alert("Only CSV files are allowed");
+    uploadText.innerHTML = `
+      <span class="text-danger">Only CSV files are allowed</span>
+    `;
     batchFileInput.value = "";
     return;
   }
 
   selectedFile = file;
-  console.log("Selected CSV:", file.name);
-  alert("File selected successfully");
 
+  uploadText.innerHTML = `
+    <span class="text-success">
+      <strong>Selected file:</strong> ${file.name}
+    </span>
+  `;
+
+  console.log("Selected CSV:", file.name);
   showAnalyzeButton();
 }
+
+
 
 // ==============================
 // ANALYZE BUTTON (UI-INDEPENDENT)
@@ -88,6 +100,9 @@ async function submitBatch() {
 
     console.log("Batch response:", result);
     renderBatchResults(result);
+
+    analyzeBtn.style.display = "none";
+    showClearButton();
 
   } catch (err) {
     console.error("Batch error:", err);
@@ -139,4 +154,47 @@ function renderBatchResults(response) {
 
     batchResultsBody.appendChild(tr);
   });
+}
+
+function clearAll() {
+  // Reset state
+  selectedFile = null;
+
+  // Reset file input
+  batchFileInput.value = "";
+
+  // Reset upload text
+  uploadText.innerHTML = "Drag & drop CSV file or click to browse";
+
+  // Remove analyze button
+  if (analyzeBtn) {
+    analyzeBtn.remove();
+    analyzeBtn = null;
+  }
+
+  // Hide results
+  batchResults.style.display = "none";
+  batchSummary.style.display = "none";
+  batchResultsBody.innerHTML = "";
+
+  // Remove visual highlight
+  uploadArea.classList.remove("file-selected");
+}
+
+let clearBtn = null;
+
+function showClearButton() {
+  if (clearBtn) return;
+
+  clearBtn = document.createElement("button");
+  clearBtn.className = "btn btn-outline-secondary mt-2";
+  clearBtn.textContent = "Analyze Another File";
+
+  clearBtn.addEventListener("click", () => {
+    clearAll();
+    clearBtn.remove();
+    clearBtn = null;
+  });
+
+  uploadArea.parentElement.appendChild(clearBtn);
 }
