@@ -171,43 +171,43 @@
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor1">Sensor 1 (Aroma Compounds)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor1" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor1" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor2">Sensor 2 (Phenolic Content)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor2" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor2" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor3">Sensor 3 (Theaflavins)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor3" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor3" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor4">Sensor 4 (Terpenoids)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor4" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor4" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor5">Sensor 5 (Caffeine Level)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor5" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor5" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="sensor6">Sensor 6 (Amino Acids)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor6" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor6" placeholder="Enter value" required>
                           </div>
                         </div>
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="sensor7">Sensor 7 (Volatile Compounds)</label>
-                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor7" placeholder="Enter value (0-5V)" required>
+                            <input type="number" step="0.01" class="form-control sensor-input" id="sensor7" placeholder="Enter value" required>
                           </div>
                         </div>
                       </div>
@@ -359,7 +359,7 @@
                             </div>
                             <div class="char-details">
                               <h5>Oxidation Level</h5>
-                              <p>Medium (65-70%)</p>
+                              <p id="oxidationLevel">Medium (65-70%)</p>
                             </div>
                           </div>
                           <div class="characteristic">
@@ -368,25 +368,7 @@
                             </div>
                             <div class="char-details">
                               <h5>Caffeine Content</h5>
-                              <p>Moderate (3.2%)</p>
-                            </div>
-                          </div>
-                          <div class="characteristic">
-                            <div class="char-icon bg-teal">
-                              <i class="bi bi-droplet"></i>
-                            </div>
-                            <div class="char-details">
-                              <h5>Moisture Content</h5>
-                              <p>Optimal (2.8%)</p>
-                            </div>
-                          </div>
-                          <div class="characteristic">
-                            <div class="char-icon bg-pink">
-                                <i class="bi bi-hourglass-split"></i>
-                            </div>
-                            <div class="char-details">
-                              <h5>Steep Time</h5>
-                              <p>3-4 minutes</p>
+                              <p id="caffeineContent">Moderate (3.2%)</p>
                             </div>
                           </div>
                         </div>
@@ -400,25 +382,28 @@
                       <div class="flavor-attribute mb-3">
                         <label>Floral Notes</label>
                         <div class="flavor-meter">
-                          <div class="flavor-level" style="width: 80%"></div>
+                          <div class="flavor-level" id="floralBar"></div>
                         </div>
                       </div>
+
                       <div class="flavor-attribute mb-3">
                         <label>Fruity Notes</label>
                         <div class="flavor-meter">
-                          <div class="flavor-level" style="width: 45%"></div>
+                          <div class="flavor-level" id="fruityBar"></div>
                         </div>
                       </div>
+
                       <div class="flavor-attribute mb-3">
                         <label>Woody Notes</label>
                         <div class="flavor-meter">
-                          <div class="flavor-level" style="width: 30%"></div>
+                          <div class="flavor-level" id="woodyBar"></div>
                         </div>
                       </div>
+
                       <div class="flavor-attribute">
                         <label>Briskness</label>
                         <div class="flavor-meter">
-                          <div class="flavor-level" style="width: 75%"></div>
+                          <div class="flavor-level" id="brisknessBar"></div>
                         </div>
                       </div>
                     </div>
